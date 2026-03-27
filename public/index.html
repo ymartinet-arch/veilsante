@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VeilSanté</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+
+    .header { background: linear-gradient(135deg,#1a1f2e,#16213e); border-bottom: 1px solid #2d3748; padding: 14px 20px; position: sticky; top: 0; z-index: 100; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg,#3b82f6,#06b6d4); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .logo-title { font-weight: 700; font-size: 17px; color: #fff; }
+    .logo-sub { font-size: 11px; color: #64748b; }
+    .badge-urgent { background: #dc2626; color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+    .btn-refresh { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 7px 14px; background: linear-gradient(135deg,#059669,#0891b2); color: #fff; }
+    .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .tabs { display: flex; gap: 4px; margin-top: 14px; flex-wrap: wrap; }
+    .tab { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 7px 14px; transition: all .15s; }
+    .tab.active { background: linear-gradient(135deg,#3b82f6,#06b6d4); color: #fff; }
+    .tab.inactive { background: #1e293b; color: #94a3b8; }
+
+    .main { padding: 18px 20px; max-width: 940px; margin: 0 auto; }
+
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .filter-btn { border: none; cursor: pointer; border-radius: 20px; font-weight: 600; font-size: 12px; padding: 5px 13px; transition: all .15s; }
+    .filter-btn.active { background: #3b82f6; color: #fff; }
+    .filter-btn.inactive { background: #1e293b; color: #64748b; }
+    .filter-btn.folder-active { background: #7c3aed; color: #fff; }
+    .search-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+    .search-input { flex: 1; padding: 9px 13px; border-radius: 9px; border: 1px solid #2d3748; background: #1e293b; color: #e2e8f0; font-size: 13px; outline: none; }
+    .btn-urgent { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 9px 14px; }
+    .count-label { color: #475569; font-size: 12px; margin-bottom: 12px; }
+
+    .card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 12px; padding: 16px; position: relative; margin-bottom: 10px; transition: border-color .2s; }
+    .card.urgent { border-color: #dc2626; }
+    .card:hover { border-color: #3b82f6; }
+    .card-meta { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-bottom: 7px; }
+    .card-cat { color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
+    .card-source { color: #64748b; font-size: 11px; }
+    .card-date { color: #475569; font-size: 11px; margin-left: auto; }
+    .card-title { font-weight: 700; color: #f1f5f9; margin-bottom: 5px; line-height: 1.4; padding-right: 30px; font-size: 14px; }
+    .card-title a:hover { color: #60a5fa; }
+    .card-summary { color: #94a3b8; font-size: 13px; line-height: 1.6; }
+    .badge-alerte { position: absolute; top: 10px; right: 42px; background: #dc2626; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; }
+    .btn-save { position: absolute; top: 10px; right: 10px; background: none; border: none; cursor: pointer; font-size: 16px; }
+
+    .ai-box { background: linear-gradient(135deg,#1e1b4b,#1e293b); border: 1px solid #3730a3; border-radius: 14px; padding: 18px; margin-bottom: 18px; }
+    .ai-title { font-weight: 700; color: #a5b4fc; margin-bottom: 3px; }
+    .ai-sub { color: #64748b; font-size: 13px; }
+    .suggestions { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+    .suggestion-btn { border: 1px solid #2d3748; background: #1e293b; color: #94a3b8; font-size: 12px; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .textarea-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    textarea { flex: 1; padding: 11px 14px; border-radius: 10px; border: 1px solid #2d3748; background: #1e293b; color: #e2e8f0; font-size: 13px; resize: none; height: 78px; outline: none; font-family: inherit; }
+    .btn-send { border: none; cursor: pointer; border-radius: 10px; font-weight: 700; font-size: 14px; padding: 11px 18px; background: linear-gradient(135deg,#3b82f6,#06b6d4); color: #fff; }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ai-response { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 12px; padding: 18px; }
+    .ai-response-header { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .ai-avatar { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg,#3b82f6,#06b6d4); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .ai-response-text { color: #cbd5e1; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
+
+    .digest-header { background: linear-gradient(135deg,#1e293b,#0f172a); border: 1px solid #334155; border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+    .digest-period { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+    .btn-period { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 8px 18px; }
+    .btn-generate { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 8px 20px; background: linear-gradient(135deg,#3b82f6,#06b6d4); color: #fff; margin-left: auto; }
+    .digest-output { background: #0f172a; border-radius: 10px; padding: 18px; color: #cbd5e1; font-size: 13px; line-height: 1.9; white-space: pre-wrap; max-height: 520px; overflow-y: auto; font-family: monospace; }
+    .btn-copy { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 7px 16px; color: #fff; }
+    .tip { margin-top: 12px; padding: 12px; background: #1e293b; border-radius: 8px; font-size: 12px; color: #64748b; }
+
+    .sources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 10px; }
+    .source-card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; }
+    .source-flag { width: 36px; height: 36px; border-radius: 9px; background: #0f172a; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .source-name { font-weight: 700; color: #f1f5f9; font-size: 13px; }
+    .source-status { display: flex; gap: 5px; align-items: center; margin-top: 4px; }
+    .dot-green { width: 5px; height: 5px; border-radius: 50%; background: #22c55e; display: inline-block; }
+
+    .loading { text-align: center; padding: 50px; color: #64748b; }
+    .empty { text-align: center; padding: 50px; color: #64748b; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">🏥</div>
+      <div>
+        <div class="logo-title">VeilSanté</div>
+        <div class="logo-sub" id="lastUpdate">Chargement…</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="badge-urgent" id="urgentBadge" style="display:none">🚨 <span id="urgentCount">0</span> alertes</span>
+      <button class="btn-refresh" id="btnRefresh" onclick="loadArticles()">🔄 Actualiser</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('feed')">📰 Flux</button>
+    <button class="tab inactive" onclick="switchTab('ai')">🤖 Analyse IA</button>
+    <button class="tab inactive" onclick="switchTab('digest')">📧 Digest Email</button>
+    <button class="tab inactive" onclick="switchTab('sources')">📡 Sources</button>
+    <button class="tab inactive" onclick="switchTab('saved')">🔖 Sauvegardés (<span id="savedCount">0</span>)</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- FEED -->
+  <div id="tab-feed">
+    <div class="filter-row" id="folderFilters">
+      <button class="filter-btn folder-active" onclick="setFolder(null, this)">📋 Tous</button>
+      <button class="filter-btn inactive" onclick="setFolder('Alertes', this)">🚨 Alertes</button>
+      <button class="filter-btn inactive" onclick="setFolder('France', this)">🇫🇷 France</button>
+      <button class="filter-btn inactive" onclick="setFolder('Médicaments', this)">💊 Médicaments</button>
+      <button class="filter-btn inactive" onclick="setFolder('Recherche', this)">🔬 Recherche</button>
+      <button class="filter-btn inactive" onclick="setFolder('International', this)">🌍 International</button>
+      <button class="filter-btn inactive" onclick="setFolder('Presse', this)">🗞️ Presse</button>
+    </div>
+    <div class="search-row">
+      <input class="search-input" id="searchInput" placeholder="🔍 Rechercher dans les articles…" oninput="renderArticles()" />
+      <button class="btn-urgent" id="btnUrgent" onclick="toggleUrgent()" style="background:#1e293b;color:#94a3b8">🚨 Alertes</button>
+    </div>
+    <div class="filter-row" id="catFilters">
+      <button class="filter-btn active" onclick="setCat('Tous', this)">Tous</button>
+      <button class="filter-btn inactive" onclick="setCat('Épidémies', this)">Épidémies</button>
+      <button class="filter-btn inactive" onclick="setCat('Médicaments', this)">Médicaments</button>
+      <button class="filter-btn inactive" onclick="setCat('Politiques', this)">Politiques</button>
+      <button class="filter-btn inactive" onclick="setCat('Recherche', this)">Recherche</button>
+      <button class="filter-btn inactive" onclick="setCat('Santé publique', this)">Santé publique</button>
+    </div>
+    <div class="count-label" id="countLabel"></div>
+    <div id="articlesList"></div>
+  </div>
+
+  <!-- AI -->
+  <div id="tab-ai" style="display:none">
+    <div class="ai-box">
+      <div class="ai-title">🤖 Analyste IA Santé</div>
+      <div class="ai-sub">Posez une question de veille, demandez une synthèse thématique ou une analyse sur un sujet précis.</div>
+    </div>
+    <div class="suggestions">
+      <button class="suggestion-btn" onclick="setAiQ(this.textContent)">Quelles alertes épidémiques en Europe ?</button>
+      <button class="suggestion-btn" onclick="setAiQ(this.textContent)">Résume les décisions récentes de l'ANSM</button>
+      <button class="suggestion-btn" onclick="setAiQ(this.textContent)">Avancées en oncologie ces derniers mois ?</button>
+      <button class="suggestion-btn" onclick="setAiQ(this.textContent)">État de la résistance aux antibiotiques en France</button>
+    </div>
+    <div class="textarea-row">
+      <textarea id="aiInput" placeholder="Posez votre question…"></textarea>
+      <button class="btn-send" id="btnAI" onclick="callAI()">→</button>
+    </div>
+    <div id="aiResult"></div>
+  </div>
+
+  <!-- DIGEST -->
+  <div id="tab-digest" style="display:none">
+    <div class="digest-header">
+      <div style="font-weight:700;color:#f1f5f9;font-size:16px;margin-bottom:4px">📧 Générateur de Digest Email</div>
+      <div style="color:#64748b;font-size:13px">Résumé IA des vraies actualités de la semaine, prêt à envoyer.</div>
+    </div>
+    <div class="digest-period">
+      <span style="color:#94a3b8;font-size:14px">Période :</span>
+      <button class="btn-period" id="pSemaine" onclick="setPeriod('semaine')" style="background:linear-gradient(135deg,#7c3aed,#3b82f6);color:#fff">📅 Cette semaine</button>
+      <button class="btn-period" id="pMois" onclick="setPeriod('mois')" style="background:#1e293b;color:#64748b">🗓️ Ce mois</button>
+      <button class="btn-generate" id="btnDigest" onclick="generateDigest()">✨ Générer le digest</button>
+    </div>
+    <div id="digestResult"></div>
+  </div>
+
+  <!-- SOURCES -->
+  <div id="tab-sources" style="display:none">
+    <div style="color:#64748b;font-size:13px;margin-bottom:14px">📡 35 sources RSS surveillées en temps réel</div>
+    <div class="sources-grid" id="sourcesList"></div>
+  </div>
+
+  <!-- SAVED -->
+  <div id="tab-saved" style="display:none">
+    <div id="savedList"></div>
+  </div>
+
+</div>
+
+<script>
+let allArticles = [];
+let saved = JSON.parse(localStorage.getItem('vs_saved') || '[]');
+let currentCat = 'Tous';
+let currentFolder = null;
+let urgentOnly = false;
+let digestPeriod = 'semaine';
+
+const SOURCES_LIST = [
+  {source:'ANSM',country:'🇫🇷',folder:'Alertes'},
+  {source:'ANSM Décisions',country:'🇫🇷',folder:'Médicaments'},
+  {source:'OMS Alertes',country:'🌍',folder:'Alertes'},
+  {source:'Santé Publique France',country:'🇫🇷',folder:'Alertes'},
+  {source:'EMA Sécurité',country:'🇪🇺',folder:'Alertes'},
+  {source:'Réseau Sentinelles',country:'🇫🇷',folder:'Alertes'},
+  {source:'HAS',country:'🇫🇷',folder:'France'},
+  {source:'Ministère Santé',country:'🇫🇷',folder:'France'},
+  {source:'INSERM',country:'🇫🇷',folder:'Recherche'},
+  {source:'Institut Pasteur',country:'🇫🇷',folder:'Recherche'},
+  {source:'Assurance Maladie',country:'🇫🇷',folder:'France'},
+  {source:'EMA',country:'🇪🇺',folder:'Médicaments'},
+  {source:'OMS',country:'🌍',folder:'International'},
+  {source:'RTS Santé',country:'🇨🇭',folder:'International'},
+  {source:'RTBF Santé',country:'🇧🇪',folder:'International'},
+  {source:'CDC',country:'🌍',folder:'International'},
+  {source:'Journal de Montréal',country:'🇨🇦',folder:'International'},
+  {source:'The Lancet',country:'🌍',folder:'Recherche'},
+  {source:'BMJ',country:'🌍',folder:'Recherche'},
+  {source:'Nature Medicine',country:'🌍',folder:'Recherche'},
+  {source:'TICsanté',country:'🇫🇷',folder:'Recherche'},
+  {source:'Quotidien du Médecin',country:'🇫🇷',folder:'Presse'},
+  {source:'Vidal',country:'🇫🇷',folder:'Médicaments'},
+  {source:'Jim.fr',country:'🇫🇷',folder:'Presse'},
+  {source:'Actusoins',country:'🇫🇷',folder:'Presse'},
+  {source:'20 Minutes Santé',country:'🇫🇷',folder:'Presse'},
+  {source:'Allo Docteurs',country:'🇫🇷',folder:'Presse'},
+  {source:'Destination Santé',country:'🇫🇷',folder:'Presse'},
+  {source:'Franceinfo Santé',country:'🇫🇷',folder:'Presse'},
+  {source:'Top Santé',country:'🇫🇷',folder:'Presse'},
+  {source:'Medisite',country:'🇫🇷',folder:'Presse'},
+  {source:'Santé Magazine',country:'🇫🇷',folder:'Presse'},
+  {source:'Santé Nutrition',country:'🇫🇷',folder:'Presse'},
+  {source:'Santé+ Magazine',country:'🇫🇷',folder:'Presse'},
+  {source:'Le Point Santé',country:'🇫🇷',folder:'Presse'},
+];
+
+const CAT_COLORS = {
+  'Épidémies':'#dc2626','Médicaments':'#0891b2',
+  'Politiques':'#059669','Recherche':'#7c3aed','Santé publique':'#d97706'
+};
+
+function switchTab(name) {
+  ['feed','ai','digest','sources','saved'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===name ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((btn,i) => {
+    const names = ['feed','ai','digest','sources','saved'];
+    btn.className = 'tab ' + (names[i]===name ? 'active' : 'inactive');
+  });
+  if (name==='sources') renderSources();
+  if (name==='saved') renderSaved();
+}
+
+async function loadArticles() {
+  const btn = document.getElementById('btnRefresh');
+  btn.disabled = true; btn.textContent = '⏳ Chargement…';
+  document.getElementById('articlesList').innerHTML = '<div class="loading">🔄 Récupération des flux RSS en cours…</div>';
+  try {
+    const url = currentFolder ? `/api/articles?folder=${encodeURIComponent(currentFolder)}` : '/api/articles';
+    const res = await fetch(url);
+    const data = await res.json();
+    allArticles = data.articles || [];
+    const urgentCount = allArticles.filter(a=>a.urgent).length;
+    const badge = document.getElementById('urgentBadge');
+    badge.style.display = urgentCount > 0 ? '' : 'none';
+    document.getElementById('urgentCount').textContent = urgentCount;
+    document.getElementById('lastUpdate').textContent = 'Mise à jour : ' + new Date().toLocaleString('fr-FR');
+    renderArticles();
+  } catch(e) {
+    document.getElementById('articlesList').innerHTML = '<div class="loading">❌ Erreur de chargement. Vérifiez votre connexion.</div>';
+  }
+  btn.disabled = false; btn.textContent = '🔄 Actualiser';
+}
+
+function renderArticles() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allArticles.filter(a => {
+    const mCat = currentCat==='Tous' || a.category===currentCat;
+    const mSearch = a.title.toLowerCase().includes(search) || a.summary.toLowerCase().includes(search);
+    const mUrgent = !urgentOnly || a.urgent;
+    return mCat && mSearch && mUrgent;
+  });
+  document.getElementById('countLabel').textContent = `${filtered.length} article(s) affiché(s)`;
+  if (!filtered.length) {
+    document.getElementById('articlesList').innerHTML = '<div class="empty">Aucun article trouvé.</div>';
+    return;
+  }
+  document.getElementById('articlesList').innerHTML = filtered.map(a => {
+    const catColor = CAT_COLORS[a.category] || '#334155';
+    const isSaved = saved.includes(a.id);
+    return `
+    <div class="card ${a.urgent?'urgent':''}">
+      ${a.urgent ? '<span class="badge-alerte">⚡ ALERTE</span>' : ''}
+      <button class="btn-save" onclick="toggleSave('${a.id}')">${isSaved?'🔖':'🏷️'}</button>
+      <div class="card-meta">
+        <span>${a.country}</span>
+        <span class="card-cat" style="background:${catColor}">${a.category}</span>
+        <span class="card-source">${a.source}</span>
+        <span class="card-date">${a.date}</span>
+      </div>
+      <div class="card-title"><a href="${a.url}" target="_blank" rel="noopener">${a.title} ↗</a></div>
+      <div class="card-summary">${a.summary}</div>
+    </div>`;
+  }).join('');
+}
+
+function setCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('#catFilters .filter-btn').forEach(b => b.className='filter-btn inactive');
+  btn.className='filter-btn active';
+  renderArticles();
+}
+
+function setFolder(folder, btn) {
+  currentFolder = folder;
+  document.querySelectorAll('#folderFilters .filter-btn').forEach(b => b.className='filter-btn inactive');
+  btn.className='filter-btn folder-active';
+  loadArticles();
+}
+
+function toggleUrgent() {
+  urgentOnly = !urgentOnly;
+  const btn = document.getElementById('btnUrgent');
+  btn.style.background = urgentOnly ? '#dc2626' : '#1e293b';
+  btn.style.color = urgentOnly ? '#fff' : '#94a3b8';
+  renderArticles();
+}
+
+function toggleSave(id) {
+  saved = saved.includes(id) ? saved.filter(x=>x!==id) : [...saved, id];
+  localStorage.setItem('vs_saved', JSON.stringify(saved));
+  document.getElementById('savedCount').textContent = saved.length;
+  renderArticles();
+}
+
+function setAiQ(text) { document.getElementById('aiInput').value = text; }
+
+async function callAI() {
+  const q = document.getElementById('aiInput').value.trim();
+  if (!q) return;
+  const btn = document.getElementById('btnAI');
+  btn.disabled = true; btn.textContent = '⏳';
+  document.getElementById('aiResult').innerHTML = '<div class="loading">⏳ Analyse en cours…</div>';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system:'Tu es un expert en veille sanitaire francophone. Réponds de façon synthétique, structurée, en français. Cite les sources institutionnelles (ANSM, HAS, INSERM, OMS, ECDC…).',
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Aucune réponse.';
+    document.getElementById('aiResult').innerHTML = `
+      <div class="ai-response">
+        <div class="ai-response-header">
+          <div class="ai-avatar">🤖</div>
+          <span style="font-weight:700;color:#a5b4fc;font-size:13px">Réponse IA</span>
+        </div>
+        <div class="ai-response-text">${text}</div>
+      </div>`;
+  } catch {
+    document.getElementById('aiResult').innerHTML = '<div class="loading">❌ Erreur. Réessayez.</div>';
+  }
+  btn.disabled = false; btn.textContent = '→';
+}
+
+function setPeriod(p) {
+  digestPeriod = p;
+  document.getElementById('pSemaine').style.background = p==='semaine' ? 'linear-gradient(135deg,#7c3aed,#3b82f6)' : '#1e293b';
+  document.getElementById('pSemaine').style.color = p==='semaine' ? '#fff' : '#64748b';
+  document.getElementById('pMois').style.background = p==='mois' ? 'linear-gradient(135deg,#7c3aed,#3b82f6)' : '#1e293b';
+  document.getElementById('pMois').style.color = p==='mois' ? '#fff' : '#64748b';
+}
+
+async function generateDigest() {
+  const btn = document.getElementById('btnDigest');
+  btn.disabled = true; btn.textContent = '⏳ Génération…';
+  document.getElementById('digestResult').innerHTML = '<div class="loading">✉️ L\'IA rédige votre digest…</div>';
+  try {
+    const res = await fetch('/api/digest', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ articles: allArticles.slice(0,12), period: digestPeriod==='semaine' ? 'cette semaine' : 'ce mois' })
+    });
+    const data = await res.json();
+    const digest = data.digest || '';
+    document.getElementById('digestResult').innerHTML = `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:20px">✉️</span>
+            <span style="font-weight:700;color:#f1f5f9">Digest généré</span>
+            <span style="background:#16a34a;color:#fff;font-size:10px;padding:2px 8px;border-radius:8px">Prêt</span>
+          </div>
+          <button class="btn-copy" id="btnCopy" onclick="copyDigest()" style="background:#334155">📋 Copier</button>
+        </div>
+        <div class="digest-output" id="digestText">${digest}</div>
+        <div class="tip">💡 <strong style="color:#94a3b8">Comment utiliser :</strong> Copiez → collez dans Gmail ou Outlook → envoyez à votre équipe.</div>
+      </div>`;
+  } catch {
+    document.getElementById('digestResult').innerHTML = '<div class="loading">❌ Erreur. Réessayez.</div>';
+  }
+  btn.disabled = false; btn.textContent = '✨ Générer le digest';
+}
+
+function copyDigest() {
+  const text = document.getElementById('digestText')?.textContent || '';
+  navigator.clipboard.writeText(text);
+  const btn = document.getElementById('btnCopy');
+  btn.textContent = '✅ Copié !'; btn.style.background = '#16a34a';
+  setTimeout(() => { btn.textContent = '📋 Copier'; btn.style.background = '#334155'; }, 2000);
+}
+
+function renderSources() {
+  document.getElementById('sourcesList').innerHTML = SOURCES_LIST.map(s => `
+    <div class="source-card">
+      <div class="source-flag">${s.country}</div>
+      <div>
+        <div class="source-name">${s.source}</div>
+        <div class="source-status">
+          <span style="background:#334155;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:7px">${s.folder}</span>
+          <span class="dot-green"></span>
+          <span style="color:#4ade80;font-size:10px">Actif</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderSaved() {
+  const savedArticles = allArticles.filter(a => saved.includes(a.id));
+  if (!savedArticles.length) {
+    document.getElementById('savedList').innerHTML = '<div class="empty">🔖<br><br>Aucun article sauvegardé.<br>Cliquez sur 🏷️ dans le flux.</div>';
+    return;
+  }
+  document.getElementById('savedList').innerHTML = savedArticles.map(a => {
+    const catColor = CAT_COLORS[a.category] || '#334155';
+    return `
+    <div class="card" style="border-color:#f59e0b55">
+      <button class="btn-save" onclick="toggleSave('${a.id}')">🔖</button>
+      <div class="card-meta">
+        <span>${a.country}</span>
+        <span class="card-cat" style="background:${catColor}">${a.category}</span>
+        <span class="card-source">${a.source} · ${a.date}</span>
+      </div>
+      <div class="card-title"><a href="${a.url}" target="_blank">${a.title} ↗</a></div>
+      <div class="card-summary">${a.summary}</div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('savedCount').textContent = saved.length;
+loadArticles();
+setInterval(loadArticles, 15 * 60 * 1000);
+</script>
+</body>
+</html>
